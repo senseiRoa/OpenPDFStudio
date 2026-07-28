@@ -7,10 +7,7 @@
 > **A modern open-source toolkit for PDF processing, optimization and automation.**
 
 OpenPDFStudio is an extensible collection of tools for working with PDF documents.
-
 The project is focused on providing fast, lightweight, and automation-friendly utilities that can be used from the command line, integrated into scripts, or embedded into larger workflows.
-
-The first release focuses on **high-quality PDF compression**, with many more capabilities planned for future releases.
 
 ---
 
@@ -18,17 +15,13 @@ The first release focuses on **high-quality PDF compression**, with many more ca
 
 ### Available
 
-- Compress PDF files
-- Reduce document size
-- Optimize embedded images
-- Preserve document quality
-- Cross-platform support
-- Command Line Interface (CLI)
-- Modern Graphical User Interface (GUI)
-
-
-
-
+- **Compress** — reduce PDF file size by recompressing images with configurable quality and max-width
+- **Merge** — combine multiple PDFs into a single document
+- **Split** — divide a PDF into individual pages, custom ranges, or every N pages
+- **Pages** — reorder, delete, rotate, or extract pages from a PDF
+- Cross-platform support (Windows, Linux, macOS)
+- CLI-first design with multiple entry points
+- Modern GUI with notebook tabs and live language switching (EN/ES)
 
 ---
 
@@ -59,6 +52,12 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+For development mode (entry points available system-wide):
+
+```bash
+pip install -e .
+```
+
 ---
 
 ## Usage
@@ -69,36 +68,61 @@ pip install -r requirements.txt
 python compress_gui.py
 ```
 
-### CLI
+The GUI presents a notebook with four tabs:
 
-Compress a PDF:
+| Tab | Description |
+|-----|-------------|
+| **Compress** | Reduce PDF size with quality and max-width controls |
+| **Merge** | Add multiple PDFs, reorder them, and merge into one |
+| **Split** | Split into all pages, custom ranges, or every N pages |
+| **Pages** | Reorder, delete, rotate, or extract pages |
+
+Language switching (EN/ES) is available in the top-right corner.
+
+### CLI — Compress
 
 ```bash
 python compress_pdf.py document.pdf
-```
-
-Custom quality:
-
-```bash
 python compress_pdf.py document.pdf --quality 45
-```
-
-Limit image width:
-
-```bash
 python compress_pdf.py document.pdf --max-width 1600
-```
-
-Allow overwrite:
-
-```bash
 python compress_pdf.py document.pdf --overwrite
+python compress_pdf.py document.pdf --verbose
 ```
 
-Verbose output:
+### CLI — Merge
 
 ```bash
-python compress_pdf.py document.pdf --verbose
+python merge_pdf.py parte1.pdf parte2.pdf parte3.pdf
+python merge_pdf.py *.pdf -o completo.pdf
+python merge_pdf.py a.pdf b.pdf --overwrite
+```
+
+### CLI — Split
+
+```bash
+python split_pdf.py documento.pdf
+python split_pdf.py documento.pdf --pages 1-5,6-10,11-15
+python split_pdf.py documento.pdf --every 3 -o capitulo
+```
+
+### CLI — Pages
+
+```bash
+python pages_pdf.py documento.pdf --reorder reverse
+python pages_pdf.py documento.pdf --reorder 3,1,2,4
+python pages_pdf.py documento.pdf --delete 2,5,7
+python pages_pdf.py documento.pdf --rotate 90 --pages 1,3,5
+python pages_pdf.py documento.pdf --extract 2,4,6 -o seleccion.pdf
+```
+
+### Entry points (when installed with `pip install -e .`)
+
+```bash
+compress-pdf document.pdf
+merge-pdf a.pdf b.pdf
+split-pdf doc.pdf --pages 1-5,6-10
+pages-pdf doc.pdf --reorder reverse
+openpdfstudio-gui
 ```
 
 ---
@@ -119,17 +143,17 @@ OpenPDFStudio follows a few simple principles:
 
 ## Roadmap
 
-### Version 1.x
+### Version 1.x ✅
 
 - PDF Compression
 - Performance improvements
 - Better image optimization
 
-### Version 2.x
+### Version 2.x ✅
 
 - Merge PDFs
 - Split PDFs
-- Page operations
+- Page operations (reorder, delete, rotate, extract)
 
 ### Version 3.x
 

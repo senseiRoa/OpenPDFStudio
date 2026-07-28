@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openpdfstudio"
-version = "1.0.0"
-description = "Comprime archivos PDF localmente manteniendo la mayor calidad posible."
+version = "2.0.0"
+description = "Comprime, une, divide y opera páginas de PDFs localmente."
 readme = "README.md"
 authors = [{ name = "Andres", email = "andres@example.com" }]
 license = { text = "MIT" }
@@ -31,8 +31,11 @@ Homepage = "https://github.com/senseiRoa/OpenPDFStudio"
 Repository = "https://github.com/senseiRoa/OpenPDFStudio"
 
 [project.scripts]
-compress-pdf = "pdf_compressor.cli:main"
-compress-pdf-gui = "pdf_compressor.gui:main"
+compress-pdf = "pdf_compressor.cli:compress_main"
+merge-pdf = "pdf_compressor.cli:merge_main"
+split-pdf = "pdf_compressor.cli:split_main"
+pages-pdf = "pdf_compressor.cli:pages_main"
+openpdfstudio-gui = "pdf_compressor.gui:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

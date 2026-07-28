@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""GUI — modern interface with ttkbootstrap and live language switching."""
+"""Compress tab — reduce PDF file size."""
 
 from __future__ import annotations
 
@@ -9,144 +8,40 @@ import threading
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
-from .core import compress, format_bytes
+import ttkbootstrap as tb
+from ttkbootstrap.constants import *
 
-try:
-    import ttkbootstrap as tb
-    from ttkbootstrap.constants import *
-except ImportError:
-    messagebox.showerror(
-        "Error",
-        "ttkbootstrap is not installed.\n\nRun: pip install ttkbootstrap",
-    )
-    raise SystemExit(1)
-
-from .locale import _, LANGUAGES
+from ..core import compress, format_bytes
+from ..locale import _
 
 
-class App:
-    def __init__(self) -> None:
-        self.root = tb.Window(themename="litera")
-        self.root.title("OpenPDFStudio")
-        self.root.geometry("560x660")
-        self.root.minsize(520, 620)
+class TabCompress(tb.Frame):
+    """Compress a single PDF file with quality and max-width controls."""
 
-        self.lang = "en"
+    def __init__(self, parent: tb.Window, app) -> None:
+        super().__init__(parent)
+        self.app = app
+        self._tr_map: dict = {}
+
         self.input_path = tb.StringVar()
         self.output_path = tb.StringVar()
         self.quality = tb.IntVar(value=70)
         self.max_width = tb.IntVar(value=1000)
         self.overwrite = tb.BooleanVar(value=False)
 
-        self._tr_map: dict = {}
         self._build_ui()
-        self._apply_language()
 
     # ------------------------------------------------------------------
-    # Build UI
+    # Helpers
     # ------------------------------------------------------------------
 
     def _tr(self, widget, key):
-        """Register a widget for language updates."""
         self._tr_map[id(widget)] = (widget, key)
         return widget
 
-    def _build_ui(self) -> None:
-        main = tb.Frame(self.root, padding=20)
-        main.pack(fill=BOTH, expand=True)
-
-        # -- Language switcher --
-        lang_row = tb.Frame(main)
-        lang_row.pack(anchor="e")
-        self.lang_cb = tb.Combobox(
-            lang_row,
-            values=["EN", "ES"],
-            state="readonly",
-            width=6,
-            justify="center",
-        )
-        self.lang_cb.set("EN")
-        self.lang_cb.bind("<<ComboboxSelected>>", self._on_lang_change)
-        self.lang_cb.pack()
-
-        # -- Header --
-        lbl_title = tb.Label(main, text="", font=("Segoe UI", 18, "bold"))
-        self._tr(lbl_title, "window_title")
-        lbl_title.pack(anchor="w")
-
-        lbl_sub = tb.Label(main, text="", font=("Segoe UI", 10), bootstyle="secondary")
-        self._tr(lbl_sub, "subtitle")
-        lbl_sub.pack(anchor="w", pady=(0, 16))
-
-        tb.Separator(main).pack(fill=X, pady=(0, 16))
-
-        # -- Input file --
-        self._file_row(main, "input_label", self.input_path, self._browse_input)
-        self._file_row(main, "output_label", self.output_path, self._browse_output)
-
-        chk = tb.Checkbutton(main, text="", variable=self.overwrite)
-        self._tr(chk, "overwrite")
-        chk.pack(anchor="w", pady=(0, 12))
-
-        tb.Separator(main).pack(fill=X, pady=(0, 12))
-
-        # -- Quality --
-        frame_q = tb.LabelFrame(main, text="", padding=10)
-        self._tr(frame_q, "quality_frame")
-        frame_q.pack(fill=X, pady=(0, 10))
-
-        tb.Scale(
-            frame_q, from_=1, to=100, orient=HORIZONTAL,
-            variable=self.quality, length=400,
-        ).pack(fill=X)
-        row_q = tb.Frame(frame_q)
-        row_q.pack(fill=X)
-        lbl_min = tb.Label(row_q, text="", bootstyle="secondary")
-        self._tr(lbl_min, "quality_min")
-        lbl_min.pack(side=LEFT)
-        tb.Label(row_q, textvariable=self.quality, font=("", 12, "bold"), bootstyle="primary").pack(
-            side=RIGHT, padx=(0, 4)
-        )
-        lbl_max = tb.Label(row_q, text="", bootstyle="secondary")
-        self._tr(lbl_max, "quality_max")
-        lbl_max.pack(side=RIGHT)
-
-        # -- Max width --
-        frame_w = tb.LabelFrame(main, text="", padding=10)
-        self._tr(frame_w, "width_frame")
-        frame_w.pack(fill=X, pady=(0, 10))
-
-        row_w = tb.Frame(frame_w)
-        row_w.pack(fill=X)
-        tb.Entry(row_w, textvariable=self.max_width, width=8, justify="center").pack(side=LEFT)
-        lbl_suf = tb.Label(row_w, text="", bootstyle="secondary")
-        self._tr(lbl_suf, "width_suffix")
-        lbl_suf.pack(side=LEFT, padx=(8, 0))
-
-        # -- Progress --
-        self.progress = tb.Progressbar(main, mode="indeterminate", bootstyle="success-striped")
-        self.progress.pack(fill=X, pady=(12, 0))
-
-        self.status = tb.StringVar(value="")
-        lbl_st = tb.Label(main, textvariable=self.status, bootstyle="secondary")
-        self._tr(lbl_st, "status_ready")
-        lbl_st.pack(anchor="w", pady=(4, 12))
-
-        # -- Compress button --
-        self.btn = tb.Button(main, text="", command=self._compress, bootstyle="primary", padding=(40, 10))
-        self._tr(self.btn, "compress")
-        self.btn.pack()
-
-    def _file_row(
-        self,
-        parent: tb.Frame,
-        label_key: str,
-        variable: tb.StringVar,
-        callback,
-    ) -> None:
+    def _file_row(self, parent, label_key, variable, callback):
         frame = tb.Frame(parent)
         frame.pack(fill=X, pady=(0, 8))
-
         lbl = tb.Label(frame, text="", font=("", 9, "bold"))
         self._tr(lbl, label_key)
         lbl.pack(anchor="w")
@@ -158,25 +53,103 @@ class App:
         btn.pack(side=LEFT, padx=(6, 0))
 
     # ------------------------------------------------------------------
+    # Build
+    # ------------------------------------------------------------------
+
+    def _build_ui(self) -> None:
+        pad = {"padx": 10, "pady": (0, 4)}
+        main = tb.Frame(self, padding=12)
+        main.pack(fill=BOTH, expand=True)
+
+        # -- Subtitle --
+        lbl_sub = tb.Label(main, text="", font=("Segoe UI", 10), bootstyle="secondary")
+        self._tr(lbl_sub, "subtitle")
+        lbl_sub.pack(anchor="w", **pad)
+
+        tb.Separator(main).pack(fill=X, **pad)
+
+        # -- Input / Output --
+        self._file_row(main, "input_label", self.input_path, self._browse_input)
+        self._file_row(main, "output_label", self.output_path, self._browse_output)
+
+        chk = tb.Checkbutton(main, text="", variable=self.overwrite)
+        self._tr(chk, "overwrite")
+        chk.pack(anchor="w", **pad)
+
+        tb.Separator(main).pack(fill=X, **pad)
+
+        # -- Quality --
+        frame_q = tb.LabelFrame(main, text="", padding=10)
+        self._tr(frame_q, "quality_frame")
+        frame_q.pack(fill=X, **pad)
+
+        tb.Scale(
+            frame_q, from_=1, to=100, orient=HORIZONTAL,
+            variable=self.quality, length=400,
+        ).pack(fill=X)
+
+        row_q = tb.Frame(frame_q)
+        row_q.pack(fill=X)
+        lbl_min = tb.Label(row_q, text="", bootstyle="secondary")
+        self._tr(lbl_min, "quality_min")
+        lbl_min.pack(side=LEFT)
+        tb.Label(
+            row_q,
+            textvariable=self.quality,
+            font=("", 12, "bold"),
+            bootstyle="primary",
+        ).pack(side=RIGHT, padx=(0, 4))
+        lbl_max = tb.Label(row_q, text="", bootstyle="secondary")
+        self._tr(lbl_max, "quality_max")
+        lbl_max.pack(side=RIGHT)
+
+        # -- Max width --
+        frame_w = tb.LabelFrame(main, text="", padding=10)
+        self._tr(frame_w, "width_frame")
+        frame_w.pack(fill=X, **pad)
+
+        row_w = tb.Frame(frame_w)
+        row_w.pack(fill=X)
+        tb.Entry(
+            row_w, textvariable=self.max_width, width=8, justify="center",
+        ).pack(side=LEFT)
+        lbl_suf = tb.Label(row_w, text="", bootstyle="secondary")
+        self._tr(lbl_suf, "width_suffix")
+        lbl_suf.pack(side=LEFT, padx=(8, 0))
+
+        # -- Progress --
+        self.progress = tb.Progressbar(main, mode="indeterminate", bootstyle="success-striped")
+        self.progress.pack(fill=X, **pad)
+
+        self.status = tb.StringVar(value="")
+        lbl_st = tb.Label(main, textvariable=self.status, bootstyle="secondary")
+        self._tr(lbl_st, "status_ready")
+        lbl_st.pack(anchor="w", **pad)
+
+        # -- Compress button --
+        self.btn = tb.Button(
+            main,
+            text="",
+            command=self._compress,
+            bootstyle="primary",
+            padding=(40, 10),
+        )
+        self._tr(self.btn, "compress")
+        self.btn.pack(pady=(4, 0))
+
+    # ------------------------------------------------------------------
     # Language
     # ------------------------------------------------------------------
 
-    def _on_lang_change(self, *_):
-        self.lang = "es" if self.lang_cb.get() == "ES" else "en"
-        self._apply_language()
-
-    def _apply_language(self) -> None:
+    def apply_language(self) -> None:
         for widget, key in self._tr_map.values():
-            text = _(key, self.lang)
+            text = _(key, self.app.lang)
             try:
-                if isinstance(widget, (tb.Label, tb.Button, tb.Checkbutton)):
-                    widget.config(text=text)
-                elif isinstance(widget, tb.LabelFrame):
+                if isinstance(widget, (tb.Label, tb.Button, tb.Checkbutton, tb.LabelFrame)):
                     widget.config(text=text)
             except Exception:
                 pass
-        self.root.title(_("window_title", self.lang))
-        self.status.set(_("status_ready", self.lang))
+        self.status.set(_("status_ready", self.app.lang))
 
     # ------------------------------------------------------------------
     # Actions
@@ -184,7 +157,7 @@ class App:
 
     def _browse_input(self) -> None:
         path = filedialog.askopenfilename(
-            title=_("input_label", self.lang),
+            title=_("input_label", self.app.lang),
             filetypes=[("PDF", "*.pdf"), ("All", "*.*")],
         )
         if path:
@@ -194,7 +167,7 @@ class App:
 
     def _browse_output(self) -> None:
         path = filedialog.asksaveasfilename(
-            title=_("output_label", self.lang),
+            title=_("output_label", self.app.lang),
             defaultextension=".pdf",
             filetypes=[("PDF", "*.pdf")],
         )
@@ -204,7 +177,7 @@ class App:
     def _compress(self) -> None:
         inp = self.input_path.get().strip()
         out = self.output_path.get().strip()
-        lang = self.lang
+        lang = self.app.lang
 
         errors = []
         if not inp:
@@ -227,14 +200,14 @@ class App:
 
         self.btn.config(state=DISABLED)
         self.progress.start(12)
-        self.status.set(_("status_compressing", lang))
+        self.status.set(_("status_working", lang))
 
         def task() -> None:
             try:
                 result = compress(inp, out, q, w)
-                self.root.after(0, self._on_done, result, lang)
+                self.app.root.after(0, self._on_done, result, lang)
             except Exception as exc:
-                self.root.after(0, self._on_error, exc, lang)
+                self.app.root.after(0, self._on_error, exc, lang)
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -243,7 +216,7 @@ class App:
         self.btn.config(state=NORMAL)
         ratio = (1 - result["output_size"] / result["input_size"]) * 100
         self.status.set(
-            f"✅ {_('done_original', lang)}: {format_bytes(result['input_size'])}  →  "
+            f"{_('done_original', lang)}: {format_bytes(result['input_size'])}  →  "
             f"{_('done_compressed', lang)}: {format_bytes(result['output_size'])}  "
             f"({ratio:.1f}%  ·  {result['elapsed']:.1f}s)"
         )
@@ -260,16 +233,3 @@ class App:
         self.btn.config(state=NORMAL)
         self.status.set(_("status_error", lang))
         messagebox.showerror(_("error_title", lang), str(exc))
-
-    def run(self) -> None:
-        self.root.mainloop()
-
-
-def main() -> None:
-    logging.basicConfig(level=logging.WARNING)
-    app = App()
-    app.run()
-
-
-if __name__ == "__main__":
-    main()
