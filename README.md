@@ -1,5 +1,9 @@
 # OpenPDFStudio
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="OpenPDFStudio GUI Screenshot" width="600"/>
+</p>
+
 > **A modern open-source toolkit for PDF processing, optimization and automation.**
 
 OpenPDFStudio is an extensible collection of tools for working with PDF documents.
