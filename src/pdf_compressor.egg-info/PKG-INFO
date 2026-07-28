@@ -1,0 +1,121 @@
+Metadata-Version: 2.4
+Name: pdf-compressor
+Version: 1.0.0
+Summary: Comprime archivos PDF localmente manteniendo la mayor calidad posible.
+Author-email: Andres <andres@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/andres/pdf-compressor
+Project-URL: Repository, https://github.com/andres/pdf-compressor
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Utilities
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: PyMuPDF>=1.23.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: ttkbootstrap>=1.10.0
+
+# PDF Compressor
+
+Comprime archivos PDF localmente manteniendo la mejor calidad posible.
+
+## Requisitos
+
+- Python 3.11+
+- Opcional: [Ghostscript](https://www.ghostscript.com/) (mejor compresión)
+
+## Instalación
+
+### De PyPI (cuando esté publicado)
+
+```bash
+pip install pdf-compressor
+```
+
+### Desde el repositorio
+
+```bash
+git clone https://github.com/andres/pdf-compressor.git
+cd pdf-compressor
+
+# Entorno virtual
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux / macOS
+source venv/bin/activate
+
+# Modo desarrollo (instalación editable)
+pip install -e .
+
+# O directamente
+pip install -r requirements.txt
+```
+
+## Uso
+
+### CLI
+
+```bash
+# Básico
+compress-pdf documento.pdf
+
+# Con parámetros
+compress-pdf documento.pdf --quality 50 --max-width 800
+
+# Con los scripts del proyecto
+python compress_pdf.py documento.pdf
+```
+
+### GUI
+
+```bash
+compress-pdf-gui
+# o
+python compress_gui.py
+```
+
+| Parámetro       | Default | Descripción                     |
+|-----------------|---------|---------------------------------|
+| `--quality`     | 70      | Calidad JPEG (1–100)            |
+| `--max-width`   | 1000    | Ancho máximo de imagen en px    |
+| `--overwrite`   | —       | Sobrescribir si existe          |
+| `--verbose`     | —       | Log detallado                   |
+
+## Cómo funciona
+
+1. **Ghostscript** — si está instalado, re-comprime imágenes con su motor profesional.
+2. **PyMuPDF + Pillow** — fallback. Extrae cada imagen original, la re-comprime como JPEG a la calidad deseada, y reconstruye el PDF desde cero.
+
+El archivo original nunca se modifica.
+
+## Estructura
+
+```
+pdf-compressor/
+├── src/pdf_compressor/
+│   ├── __init__.py
+│   ├── __main__.py       # python -m pdf_compressor
+│   ├── core.py           # Motor de compresión
+│   ├── cli.py            # Interfaz CLI
+│   └── gui.py            # Interfaz gráfica (ttkbootstrap)
+├── compress_pdf.py       # Wrapper CLI (legacy)
+├── compress_gui.py       # Wrapper GUI (legacy)
+├── pyproject.toml
+├── requirements.txt
+└── README.md
+```
+
+## Publicar en PyPI (mantenedores)
+
+```bash
+pip install build twine
+python -m build
+twine check dist/*
+twine upload dist/*
+```

@@ -1,0 +1,3 @@
+[console_scripts]
+compress-pdf = pdf_compressor.cli:main
+compress-pdf-gui = pdf_compressor.gui:main
