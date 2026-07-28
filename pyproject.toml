@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pdf-compressor"
+name = "openpdfstudio"
 version = "1.0.0"
 description = "Comprime archivos PDF localmente manteniendo la mayor calidad posible."
 readme = "README.md"
@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/andres/pdf-compressor"
-Repository = "https://github.com/andres/pdf-compressor"
+Homepage = "https://github.com/senseiRoa/OpenPDFStudio"
+Repository = "https://github.com/senseiRoa/OpenPDFStudio"
 
 [project.scripts]
 compress-pdf = "pdf_compressor.cli:main"

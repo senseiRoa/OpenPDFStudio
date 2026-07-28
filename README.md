@@ -1,4 +1,4 @@
-# PDF Compressor
+# OpenPDFStudio
 
 Comprime archivos PDF localmente manteniendo la mejor calidad posible.
 
@@ -12,7 +12,7 @@ Comprime archivos PDF localmente manteniendo la mejor calidad posible.
 ### De PyPI (cuando esté publicado)
 
 ```bash
-pip install pdf-compressor
+pip install openpdfstudio
 ```
 
 ### Desde el repositorio
