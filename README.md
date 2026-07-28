@@ -26,36 +26,9 @@ The first release focuses on **high-quality PDF compression**, with many more ca
 - Command Line Interface (CLI)
 - Modern Graphical User Interface (GUI)
 
----
 
-### Planned Features
 
-- Merge PDF files
-- Split PDF documents
-- Extract pages
-- Delete pages
-- Rotate pages
-- Reorder pages
-- Compress folders
-- Batch processing
-- OCR support
-- PDF → Markdown
-- PDF → Images
-- Images → PDF
-- Extract images
-- Extract text
-- Watermarks
-- Password protection
-- Metadata editor
-- Digital signatures
-- REST API
-- Docker support
-- Python package
-- MCP Server
-- AI Agent integration
-- Windmill integration
-- LangChain integration
-- OpenCode integration
+
 
 ---
 
